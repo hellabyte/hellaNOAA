@@ -29,6 +29,11 @@ sectors=(
   taw
 )
 
+fields=(
+  08
+# GEOCOLOR
+)
+
 trapped() {
   trap_signal="$?"
   printf "Trapped with signal: ${trap_signal}\n"
@@ -37,51 +42,50 @@ trapped() {
 
 trap trapped 1 2 3 4 5 6 7
 
-FD_main() {
-  field="${1:?ERR main: field missing, should be 01-16 or GEOCOLOR}"
-  sector="${2:?ERR main: sector missing, see header for list}"
+main() {
+  html_file="${1:?ERR main: html_file missing}"
+  down_file="${2:?ERR main: down_file missing}"
+  wd="${3:?ERR main: working directory missing}"
+  wget "$www" -O "$html_file"
+  egrep "x(1000|1080|1200|1808)\.jpg" "$html_file" \
+    | perl -lane "{ s/(<|>)/\n/g; print }"         \
+    | awk '!/href/ && /GOES16/ {print}'            \
+    > "$down_file"
+# rm "$html_file" 
+  mkdir -p "${wd}"
+  par_opts=(
+    --will-cite 
+    -v
+    -j10
+  )
+  parallel ${par_opts[@]} wget -nc -O "${wd}/{}" "${www}{}" :::: "$down_file"
+}
+
+FD_header() {
+  field="${1:?ERR FD_header: field missing, should be 01-16 or GEOCOLOR}"
+  sector="${2:?ERR FD_header: sector missing, see header for list}"
   www="${prefix}/${sector}/${field}/"
   fid="${sector}_${field}"
   wd="${sector}/${field}"
   html_tmp="${fid}.html"
-  txt_tmp="${fid}.txt"
-  dl_rec="download_${fid}.txt"
-  wget "$www" -O "$html_tmp"
-  htmltree "$html_tmp" > "$txt_tmp"
-  egrep "x1808.jpg" "$txt_tmp"    \
-    | grep GOES16                 \
-    | grep -v href                \
-    | sed -e 's/"//g' -e 's/ //g' \
-    > "$dl_rec"
-  rm "$html_tmp" "$txt_tmp"
-  mkdir -p "${wd}"
-  parallel --will-cite -vj10 wget -nc -O "${wd}/{}" "${www}{}" :::: "$dl_rec"
+  down_file="download_${fid}.txt"
+  main "$html_tmp" "$down_file" "$wd"
 }
 
-sector_main() {
-  field="${1:?ERR main: field missing, should be 01-16 or GEOCOLOR}"
-  sector="${2:?ERR main: sector missing, see header for list}"
+sector_header() {
+  field="${1:?ERR sector_header: field missing, should be 01-16 or GEOCOLOR}"
+  sector="${2:?ERR sector_header: sector missing, see header for list}"
   www="${prefix}/SECTOR/${sector}/${field}/"
   fid="SECTOR_${sector}_${field}"
   wd="SECTOR/${sector}/${field}"
   html_tmp="${fid}.html"
-  txt_tmp="${fid}.txt"
-  dl_rec="download_${fid}.txt"
-  wget "$www" -O "$html_tmp"
-  htmltree "$html_tmp" > "$txt_tmp"
-  egrep "x(1000|1200|1080)\.jpg" "$txt_tmp" \
-    | grep GOES16                         \
-    | grep -v href                        \
-    | sed -e 's/"//g' -e 's/ //g'         \
-    > "$dl_rec"
-  rm "$html_tmp" "$txt_tmp"
-  mkdir -p "${wd}"
-  parallel --will-cite -vj10 wget -nc -O "${wd}/{}" "${www}{}" :::: "$dl_rec"
+  down_file="download_${fid}.txt"
+  main "$html_tmp" "$down_file" "$wd"
 }
 
-for field in 08 GEOCOLOR; do
+for field in ${fields[@]}; do
   for sector in ${sectors[@]}; do
-    sector_main $field "$sector"
+    sector_header $field "$sector"
   done
-  FD_main $field "FD"
+  FD_header $field "FD"
 done
