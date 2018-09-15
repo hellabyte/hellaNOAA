@@ -31,7 +31,7 @@ sectors=(
 
 fields=(
   08
-# GEOCOLOR
+  GEOCOLOR
 )
 
 trapped() {
@@ -51,7 +51,7 @@ main() {
     | perl -lane "{ s/(<|>)/\n/g; print }"         \
     | awk '!/href/ && /GOES16/ {print}'            \
     > "$down_file"
-# rm "$html_file" 
+  rm "$html_file" 
   mkdir -p "${wd}"
   par_opts=(
     --will-cite 
