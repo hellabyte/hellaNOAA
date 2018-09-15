@@ -48,7 +48,7 @@ FD_main() {
   dl_rec="download_${fid}.txt"
   wget "$www" -O "$html_tmp"
   htmltree "$html_tmp" > "$txt_tmp"
-  egrep "1808.jpg" "$txt_tmp"     \
+  egrep "x1808.jpg" "$txt_tmp"    \
     | grep GOES16                 \
     | grep -v href                \
     | sed -e 's/"//g' -e 's/ //g' \
@@ -69,7 +69,7 @@ sector_main() {
   dl_rec="download_${fid}.txt"
   wget "$www" -O "$html_tmp"
   htmltree "$html_tmp" > "$txt_tmp"
-  egrep "1000|1200|1080\.jpg" "$txt_tmp"  \
+  egrep "x(1000|1200|1080)\.jpg" "$txt_tmp" \
     | grep GOES16                         \
     | grep -v href                        \
     | sed -e 's/"//g' -e 's/ //g'         \
