@@ -58,7 +58,7 @@ main() {
     -v
     -j10
   )
-  parallel ${par_opts[@]} wget -nc -O "${wd}/{}" "${www}{}" :::: "$down_file"
+  parallel ${par_opts[@]} wget -nv -nc -O "${wd}/{}" "${www}{}" :::: "$down_file"
 }
 
 FD_header() {
